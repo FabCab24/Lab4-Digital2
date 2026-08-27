@@ -1,0 +1,121 @@
+/*
+ *Universidad del Valle de Guatemala
+ * BE3029 - Electrónica Digital 2
+ * Fabiola Caballeros 24927
+ * Laboratorio 4: GPIOS
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <stdint.h>
+/* USER CODE END Includes */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+uint8_t contador = 0;
+uint8_t modo = 0;
+int estadoactualSUMA;
+int estadoactualRESTA;
+int estadoactualMODO;
+int nuevoestadoSUMA = GPIO_PIN_RESET;
+int nuevoestadoRESTA = GPIO_PIN_RESET;
+int nuevoestadoMODO = GPIO_PIN_RESET;
+/* USER CODE END PV */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+void contadorDecadas(void); // prototipo funcion
+/* USER CODE END 0 */
+
+/* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+      estadoactualSUMA = HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin);
+
+      estadoactualRESTA = HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin);
+
+      if (estadoactualSUMA == GPIO_PIN_SET && nuevoestadoSUMA == GPIO_PIN_RESET){
+          HAL_Delay(30);  // Antirrebote
+
+          if (HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin) == GPIO_PIN_SET){
+        	  contador++;
+
+        	  if (contador > 4){ //limite max
+               contador = 0;
+              }
+
+              contadorDecadas(); //llamo funcion
+          }
+      }
+
+      nuevoestadoSUMA = estadoactualSUMA; //actualizo estado del boton
+
+      if ((estadoactualRESTA == GPIO_PIN_SET) && (nuevoestadoRESTA == GPIO_PIN_RESET)){
+          HAL_Delay(30);  // Antirrebote
+
+          if (HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin) == GPIO_PIN_SET){
+        	  contador--;
+        	  if (contador < 0){ //limite min
+               contador = 4;
+              }
+
+              contadorDecadas(); //llamo funcion
+          }
+      }
+
+      nuevoestadoRESTA = estadoactualRESTA; //actualizo estado del boton
+
+      HAL_Delay(1);
+  }
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+
+}
+
+
+void contadorDecadas(void){ //funcion
+
+	switch(contador){
+	case 0:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // todos apagados
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_SET); // enciendo led 1 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 2 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 3 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 4:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 4 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_SET);
+		break;
+	}
+
+}
+
+  /* USER CODE END 3 */
+
