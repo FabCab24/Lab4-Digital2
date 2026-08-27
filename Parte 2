@@ -1,0 +1,10 @@
+// funcion para led rgb
+void LedRGB(GPIO_PinState rojo, GPIO_PinState verde, GPIO_PinState azul){ // modifica duty cycle para cada color
+
+	HAL_GPIO_WritePin(LRed_GPIO_Port, LRed_Pin, rojo);
+	HAL_GPIO_WritePin(LGreen_GPIO_Port, LGreen_Pin, verde);
+	HAL_GPIO_WritePin(LBlue_GPIO_Port, LBlue_Pin, azul);
+}
+//ejemplo
+//para llamar funcion en color rojo
+LedRGB(GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_RESET);
