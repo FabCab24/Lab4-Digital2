@@ -1,0 +1,100 @@
+ while (1)
+  {
+      estadoactualSUMA = HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin);
+      estadoactualRESTA = HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin);
+      estadoactualMODO = HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin);
+
+ // seleccion de modo
+      if ((estadoactualMODO == GPIO_PIN_SET) && (nuevoestadoMODO == GPIO_PIN_RESET)){
+             HAL_Delay(30);  // Antirrebote
+
+           if (HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin) == GPIO_PIN_SET){
+           	  modo++;
+           	  
+           	  if (modo > 2){ //limite min
+                  modo = 0;
+           	  }
+           	  contador= 0;
+           	  
+           	  if (modo == 0){
+           	    contadorDecadas();
+           	    LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_RESET);
+           	  }
+           	  else if (modo == 1){
+           		contadorDecadas();
+           	  }
+           	  else{
+           		 contadorRGB();
+           	  }
+           }
+      }
+
+      nuevoestadoMODO = estadoactualMODO; //actualizo estado del boton
+
+  // incremento del contador
+      if (estadoactualSUMA == GPIO_PIN_SET && nuevoestadoSUMA == GPIO_PIN_RESET){
+          HAL_Delay(30);  // Antirrebote
+
+          if (HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin) == GPIO_PIN_SET){
+        	  contador++;
+
+        	  if (modo == 1 && contador > 4){ //limite max contador decadas
+               contador = 0;
+               contadorDecadas();
+              }
+        	  else if (modo == 2 && contador > 6){ //limite max contador rgb
+        	   contador = 0;
+        	   contadorRGB();
+        	  }
+          }
+      }
+      nuevoestadoSUMA = estadoactualSUMA; //actualizo estado del boton
+
+
+  // decremento del contador
+      if ((estadoactualRESTA == GPIO_PIN_SET) && (nuevoestadoRESTA == GPIO_PIN_RESET)){
+          HAL_Delay(30);  // Antirrebote
+
+          if (HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin) == GPIO_PIN_SET){
+        	  contador--;
+        	  if (modo == 1 && contador < 0){ //limite min contador decadas
+               contador = 4;
+               contadorDecadas();
+              }
+        	  else if (modo == 2 && contador < 0){ //limite min contador rgb
+        	   contador = 6;
+        	   contadorRGB();
+        	  }
+          }
+      }
+
+      nuevoestadoRESTA = estadoactualRESTA; //actualizo estado del boton
+      HAL_Delay(1);
+  }
+
+
+void contadorRGB(void){
+
+	switch(contador){
+		case 0:
+			LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_RESET); //todo off
+			break;
+		case 1:
+			LedRGB(GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_RESET); //rojo on
+			break;
+		case 2:
+			LedRGB(GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET); //rojo y azul on
+			break;
+		case 3:
+			LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_SET); //azul on
+		case 4:
+			LedRGB(GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_SET); //verde y azul on
+			break;
+		case 5:
+			LedRGB(GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET); //verde on
+			break;
+		case 6:
+			LedRGB(GPIO_PIN_SET, GPIO_PIN_SET, GPIO_PIN_RESET);	//rojo y verde on
+			break;
+	}
+}
