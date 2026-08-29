@@ -1,77 +1,198 @@
- while (1)
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+uint8_t contador = 0; //variables principales
+uint8_t modo = 0;
+
+GPIO_PinState estadoactualSUMA; //variables para botones (lectura y antirrebote)
+GPIO_PinState estadoactualRESTA;
+GPIO_PinState estadoactualMODO;
+GPIO_PinState nuevoestadoSUMA = GPIO_PIN_RESET;
+GPIO_PinState nuevoestadoRESTA = GPIO_PIN_RESET;
+GPIO_PinState nuevoestadoMODO = GPIO_PIN_RESET;
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+void contadorDecadas(void); // prototipos de funciones
+void contadorRGB(void);
+void LedRGB(GPIO_PinState rojo, GPIO_PinState verde, GPIO_PinState azul);
+
+
+/* USER CODE END 0 */
+
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  /* USER CODE BEGIN 2 */
+ contador = 0; //todo apagado al iniciar
+ modo = 0;
+ contadorDecadas();
+ LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_RESET);
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
   {
-      estadoactualSUMA = HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin);
+      estadoactualSUMA = HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin); //leo el estado de botones
       estadoactualRESTA = HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin);
       estadoactualMODO = HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin);
 
- // seleccion de modo
       if ((estadoactualMODO == GPIO_PIN_SET) && (nuevoestadoMODO == GPIO_PIN_RESET)){
-             HAL_Delay(30);  // Antirrebote
+          HAL_Delay(30);  //antirrebote
 
-           if (HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin) == GPIO_PIN_SET){
-           	  modo++;
-           	  
-           	  if (modo > 2){ //limite min
+          if (HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin) == GPIO_PIN_SET){
+              modo++;
+
+              if (modo > 2){
                   modo = 0;
-           	  }
-           	  contador= 0;
-           	  
-           	  if (modo == 0){
-           	    contadorDecadas();
-           	    LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_RESET);
-           	  }
-           	  else if (modo == 1){
-           		contadorDecadas();
-           	  }
-           	  else{
-           		 contadorRGB();
-           	  }
-           }
+              }
+              contador = 0;
+              contadorDecadas();
+              contadorRGB();
+          }
       }
 
-      nuevoestadoMODO = estadoactualMODO; //actualizo estado del boton
+// incrementar
 
-  // incremento del contador
-      if (estadoactualSUMA == GPIO_PIN_SET && nuevoestadoSUMA == GPIO_PIN_RESET){
-          HAL_Delay(30);  // Antirrebote
+      if ((modo != 0) && (estadoactualSUMA == GPIO_PIN_SET) && (nuevoestadoSUMA == GPIO_PIN_RESET)){
+          HAL_Delay(30);  //antirrebote
 
           if (HAL_GPIO_ReadPin(Boton3_GPIO_Port, Boton3_Pin) == GPIO_PIN_SET){
-        	  contador++;
+              contador++;
 
-        	  if (modo == 1 && contador > 4){ //limite max contador decadas
-               contador = 0;
-               contadorDecadas();
+              if (modo == 1){
+
+                  if (contador > 4){ //limite superior del contador de decadas
+                      contador = 0;
+                  }
+                  contadorDecadas();
               }
-        	  else if (modo == 2 && contador > 6){ //limite max contador rgb
-        	   contador = 0;
-        	   contadorRGB();
-        	  }
-          }
-      }
-      nuevoestadoSUMA = estadoactualSUMA; //actualizo estado del boton
 
+              else if (modo == 2){
 
-  // decremento del contador
-      if ((estadoactualRESTA == GPIO_PIN_SET) && (nuevoestadoRESTA == GPIO_PIN_RESET)){
-          HAL_Delay(30);  // Antirrebote
-
-          if (HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin) == GPIO_PIN_SET){
-        	  contador--;
-        	  if (modo == 1 && contador < 0){ //limite min contador decadas
-               contador = 4;
-               contadorDecadas();
+                  if (contador > 6){ //limite superior de contador rgb
+                      contador = 0;
+                  }
+                  contadorRGB();
               }
-        	  else if (modo == 2 && contador < 0){ //limite min contador rgb
-        	   contador = 6;
-        	   contadorRGB();
-        	  }
           }
       }
 
-      nuevoestadoRESTA = estadoactualRESTA; //actualizo estado del boton
+// decrementar
+
+      if ((modo != 0) && (estadoactualRESTA == GPIO_PIN_SET) && (nuevoestadoRESTA == GPIO_PIN_RESET)){
+           HAL_Delay(30);  //antirrebote
+
+           if (HAL_GPIO_ReadPin(Boton2_GPIO_Port, Boton2_Pin) == GPIO_PIN_SET){
+               contador--;
+
+               if (modo == 1){
+
+                  if (contador < 0){ //limite inferior de contador de decadas
+                      contador = 4;
+                  }
+                  contadorDecadas();
+                  }
+
+                  else if (modo == 2){ //limite inferior de contador rgb
+
+                      if (contador < 0){
+                          contador = 6;
+                      }
+                      contadorRGB();
+                  }
+             }
+      }
+
+      nuevoestadoSUMA = estadoactualSUMA; //actualizo los estados de los botones
+      nuevoestadoRESTA = estadoactualRESTA;
+      nuevoestadoMODO = estadoactualMODO;
+
       HAL_Delay(1);
   }
 
+    /* USER CODE END WHILE */
+
+/* USER CODE BEGIN 3 */
+
+}
+
+void contadorDecadas(void){ //funcion
+
+	switch(contador){
+	case 0:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // todos apagados
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_SET); // enciendo led 1 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 2 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 3 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_RESET);
+		break;
+	case 4:
+		HAL_GPIO_WritePin(L1_GPIO_Port, L1_Pin, GPIO_PIN_RESET); // enciendo led 4 (apago las demas)
+		HAL_GPIO_WritePin(L2_GPIO_Port, L2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L3_GPIO_Port, L3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(L4_GPIO_Port, L4_Pin, GPIO_PIN_SET);
+		break;
+	}
+}
+
+void LedRGB(GPIO_PinState rojo, GPIO_PinState verde, GPIO_PinState azul){ // modifica duty cycle para cada color
+
+	HAL_GPIO_WritePin(LRed_GPIO_Port, LRed_Pin, rojo);
+	HAL_GPIO_WritePin(LGreen_GPIO_Port, LGreen_Pin, verde);
+	HAL_GPIO_WritePin(LBlue_GPIO_Port, LBlue_Pin, azul);
+}
 
 void contadorRGB(void){
 
@@ -86,7 +207,8 @@ void contadorRGB(void){
 			LedRGB(GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET); //rojo y azul on
 			break;
 		case 3:
-			LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_SET); //azul on
+			LedRGB(GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_SET); //azul o
+			break;
 		case 4:
 			LedRGB(GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_SET); //verde y azul on
 			break;
@@ -97,4 +219,7 @@ void contadorRGB(void){
 			LedRGB(GPIO_PIN_SET, GPIO_PIN_SET, GPIO_PIN_RESET);	//rojo y verde on
 			break;
 	}
+
+
+  /* USER CODE END 3 */
 }
