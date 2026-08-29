@@ -1,0 +1,23 @@
+//cambio de modo
+
+if ((estadoactualMODO == GPIO_PIN_SET) && (nuevoestadoMODO == GPIO_PIN_RESET)){
+          HAL_Delay(30);  //antirrebote
+
+          if (HAL_GPIO_ReadPin(Boton1_GPIO_Port, Boton1_Pin) == GPIO_PIN_SET){
+              modo++;
+
+              if (modo > 2){
+                  modo = 0;
+              }
+              contador = 0;
+              contadorDecadas();
+              contadorRGB();
+
+              if (modo == 2){ //activo led de indicador en modo 2
+                  HAL_GPIO_WritePin(Indicador_GPIO_Port, Indicador_Pin, GPIO_PIN_SET);
+              }
+              else{ //apago led de indicador en cualquier otro modo
+                  HAL_GPIO_WritePin(Indicador_GPIO_Port, Indicador_Pin, GPIO_PIN_RESET);
+              }
+          }
+      }
